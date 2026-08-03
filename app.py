@@ -198,7 +198,7 @@ TXT = {
     "TH": {
         "app_title": "⚡ Text Extractor",
         "banner": "แปลงข้อความยุ่งเหยิงให้เป็นข้อมูลมีโครงสร้างภายในไม่กี่วินาที",
-        "api_key_label": "Anthropic API Key",
+        "api_key_label": "🔑 Anthropic API Key",
         "api_key_placeholder": "sk-ant-...",
         "check_button": "🔑 Check",
         "go_pro_button": "👑 Go Pro",
@@ -207,8 +207,12 @@ TXT = {
         "api_key_valid": "API Key ใช้งานได้",
         "api_key_invalid": "API Key ไม่ถูกต้องหรือหมดอายุ",
         "api_key_error": "ตรวจสอบไม่สำเร็จ",
+        "lang_label": "🌐 ภาษา",
+        "api_key_tutorial_note": "💡 ยังไม่มี API Key? คู่มือขอ Key จะเพิ่มเข้ามาเร็วๆ นี้",
         "step1_title": "STEP 1 · เลือกโครงสร้างข้อมูลที่ต้องการสกัด",
         "preset_label": "เลือกรูปแบบ (Preset)",
+        "preset_placeholder": "👇 เลือกรูปแบบที่ต้องการ (Preset)",
+        "preset_placeholder_hint": "กรุณาเลือกรูปแบบข้อมูลด้านบนก่อนเริ่มใช้งาน",
         "preset_custom_label": "✨ [PRO] Custom Schema Builder",
         "locked_fields_title": "🔒 ฟิลด์ที่จะสกัด (ค่าเริ่มต้น)",
         "upsell_text": "ต้องการฟิลด์เพิ่มหรือกำหนดชื่อฟิลด์เอง? ปลดล็อก Pro ได้ที่ด้านล่างสุดของหน้า ⬇️",
@@ -235,6 +239,7 @@ TXT = {
         "show_raw_response": "ดูข้อความดิบที่ AI ตอบกลับมา",
         "success_banner": "✅ สกัดข้อมูลสำเร็จภายใน {seconds} วินาที",
         "mock_note": "ตัวอย่างจำลอง ไม่ได้เรียก AI จริง",
+        "copy_table_expander": "📋 คัดลอกตาราง (Copy Table)",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
@@ -260,7 +265,7 @@ TXT = {
     "EN": {
         "app_title": "⚡ Text Extractor",
         "banner": "Transform messy text into clean structured data in seconds",
-        "api_key_label": "Anthropic API Key",
+        "api_key_label": "🔑 Anthropic API Key",
         "api_key_placeholder": "sk-ant-...",
         "check_button": "🔑 Check",
         "go_pro_button": "👑 Go Pro",
@@ -269,8 +274,12 @@ TXT = {
         "api_key_valid": "API key is valid",
         "api_key_invalid": "API key is invalid or expired",
         "api_key_error": "Could not verify key",
+        "lang_label": "🌐 Language",
+        "api_key_tutorial_note": "💡 Don't have a key yet? A how-to guide is coming soon",
         "step1_title": "STEP 1 · Choose the data structure to extract",
         "preset_label": "Choose a preset",
+        "preset_placeholder": "👇 Choose the preset you'd like to use",
+        "preset_placeholder_hint": "Please choose a data format above to get started",
         "preset_custom_label": "✨ [PRO] Custom Schema Builder",
         "locked_fields_title": "🔒 Fields to extract (fixed)",
         "upsell_text": "Need more fields or custom names? Unlock Pro at the bottom of the page ⬇️",
@@ -297,6 +306,7 @@ TXT = {
         "show_raw_response": "View the AI's raw response",
         "success_banner": "✅ Data extracted successfully in {seconds}s",
         "mock_note": "sample preview, no real AI call made",
+        "copy_table_expander": "📋 Copy Table",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
@@ -486,7 +496,7 @@ _DEFAULTS = {
     "api_key_status": None,       # None | "valid" | "invalid"
     "api_key_message": "",
     "is_pro": False,
-    "preset_choice": "meeting_notes",
+    "preset_choice": None,
     "custom_field_ids": [0, 1, 2],
     "next_field_id": 3,
     "raw_text_input": "",
@@ -533,6 +543,8 @@ def make_preset_formatter(lang, is_pro):
     (ไม่ไปอ่าน st.session_state ซ้ำตอนถูกเรียกทีหลัง) เพื่อให้ผลลัพธ์เสถียร
     ไม่ว่า Streamlit จะเรียกฟังก์ชันนี้ซ้ำตอนไหนก็ตาม"""
     def _format(key):
+        if key is None:
+            return TXT[lang]["preset_placeholder"]
         if key == "custom":
             base = TXT[lang]["preset_custom_label"]
             return base if is_pro else base + " 🔒"
@@ -750,22 +762,27 @@ def activate_pro():
 # 8) HEADER ZONE
 # ============================================================
 
-header_cols = st.columns([2.3, 1.0, 2.6, 0.9, 1.2])
-with header_cols[0]:
+top_cols = st.columns([4.2, 1.3, 1.2])
+with top_cols[0]:
     st.markdown(f'<div class="logo-title">{t("app_title")}</div>', unsafe_allow_html=True)
-with header_cols[1]:
-    st.radio("lang", ["TH", "EN"], horizontal=True, label_visibility="collapsed", key="lang")
-with header_cols[2]:
+with top_cols[1]:
+    st.radio(t("lang_label"), ["TH", "EN"], horizontal=True, key="lang")
+with top_cols[2]:
+    st.markdown("<div style='height: 1.9rem;'></div>", unsafe_allow_html=True)
+    if st.button(t("go_pro_button"), width="stretch", type="primary"):
+        st.toast(t("go_pro_toast"))
+
+key_cols = st.columns([5, 1])
+with key_cols[0]:
     st.text_input(t("api_key_label"), key="api_key_input", type="password",
-                  placeholder=t("api_key_placeholder"), label_visibility="collapsed")
-with header_cols[3]:
+                  placeholder=t("api_key_placeholder"))
+with key_cols[1]:
+    st.markdown("<div style='height: 1.9rem;'></div>", unsafe_allow_html=True)
     if st.button(t("check_button"), width="stretch"):
         ok, msg = check_api_key(st.session_state.api_key_input)
         st.session_state.api_key_status = "valid" if ok else "invalid"
         st.session_state.api_key_message = msg
-with header_cols[4]:
-    if st.button(t("go_pro_button"), width="stretch", type="primary"):
-        st.toast(t("go_pro_toast"))
+st.caption(t("api_key_tutorial_note"))
 
 if st.session_state.api_key_status == "valid":
     st.caption(f"✅ {st.session_state.api_key_message}")
@@ -786,14 +803,16 @@ st.markdown(f'<div class="hero-banner">{t("banner")}</div>', unsafe_allow_html=T
 
 st.markdown(f'<div class="zone-title">{t("step1_title")}</div>', unsafe_allow_html=True)
 
-preset_options = ["meeting_notes", "product_reviews", "video_script", "raw_text_table", "custom"]
+preset_options = [None, "meeting_notes", "product_reviews", "video_script", "raw_text_table", "custom"]
 st.selectbox(t("preset_label"), preset_options, key="preset_choice",
              format_func=make_preset_formatter(st.session_state.lang, st.session_state.is_pro),
              on_change=on_preset_change)
 
 current_choice = st.session_state.preset_choice
 
-if current_choice == "custom" and not st.session_state.is_pro:
+if current_choice is None:
+    st.info(t("preset_placeholder_hint"))
+elif current_choice == "custom" and not st.session_state.is_pro:
     st.markdown(
         f'<div class="locked-card"><div class="locked-title">{t("pro_locked_title")}</div>'
         f'<div class="locked-desc">{t("pro_locked_desc")}</div></div>',
@@ -839,10 +858,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-convert_disabled = current_choice == "custom" and not st.session_state.is_pro
+convert_disabled = current_choice is None or (current_choice == "custom" and not st.session_state.is_pro)
 col_a, col_b = st.columns([1, 2])
 with col_a:
-    if current_choice != "custom":
+    if current_choice not in (None, "custom"):
         st.button(t("sample_button"), on_click=use_sample_text, width="stretch")
 with col_b:
     convert_clicked = st.button(t("convert_button"), type="primary",
@@ -876,6 +895,9 @@ if st.session_state.last_records:
 
     with tab1:
         st.dataframe(pd.DataFrame(st.session_state.last_records), width="stretch", hide_index=True)
+        with st.expander(t("copy_table_expander")):
+            tsv_str = pd.DataFrame(st.session_state.last_records).to_csv(sep="\t", index=False)
+            st.code(tsv_str, language=None)
 
     with tab2:
         json_str = json.dumps(st.session_state.last_records, ensure_ascii=False, indent=2)
