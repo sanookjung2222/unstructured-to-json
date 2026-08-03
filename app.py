@@ -28,6 +28,7 @@ import json
 import re
 import time
 import os
+import html
 
 
 # ============================================================
@@ -63,24 +64,24 @@ CUSTOM_CSS = """
 }
 
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-.stApp { background-color: var(--paper); }
+.stApp { background-color: var(--paper) !important; }
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 
 h1, h2, h3, h4, .logo-title, .zone-title {
   font-family: 'Space Grotesk', sans-serif !important;
-  color: var(--ink);
+  color: var(--ink) !important;
 }
 
 code, pre, [data-testid="stCodeBlock"] {
   font-family: 'JetBrains Mono', monospace !important;
 }
 
-.logo-title { font-size: 1.5rem; font-weight: 700; color: var(--ink); padding-top: 0.4rem; }
+.logo-title { font-size: 1.5rem; font-weight: 700; color: var(--ink) !important; padding-top: 0.4rem; }
 
 .hero-banner {
   background: linear-gradient(135deg, var(--ink) 0%, #2A2F3F 100%);
-  color: #FAFAF9;
+  color: #FAFAF9 !important;
   padding: 1.4rem 1.8rem;
   border-radius: 14px;
   font-size: 1.1rem;
@@ -115,14 +116,14 @@ code, pre, [data-testid="stCodeBlock"] {
 .field-chip {
   font-family: 'JetBrains Mono', monospace;
   background: #FFF3DE;
-  color: #8A5A00;
+  color: #8A5A00 !important;
   border-radius: 6px;
   padding: 0.15rem 0.55rem;
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
 }
-.field-desc { color: var(--muted); font-size: 0.88rem; }
+.field-desc { color: var(--muted) !important; font-size: 0.88rem; }
 
 .locked-card {
   background: #F4F4F5;
@@ -130,13 +131,13 @@ code, pre, [data-testid="stCodeBlock"] {
   border-radius: 12px;
   padding: 1.1rem 1.3rem;
 }
-.locked-title { font-weight: 700; color: var(--ink); margin-bottom: 0.3rem; }
-.locked-desc { color: var(--muted); font-size: 0.9rem; }
+.locked-title { font-weight: 700; color: var(--ink) !important; margin-bottom: 0.3rem; }
+.locked-desc { color: var(--muted) !important; font-size: 0.9rem; }
 
 .pro-badge {
   display: inline-block;
   background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--accent-ink) !important;
   font-weight: 700;
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
@@ -146,7 +147,7 @@ code, pre, [data-testid="stCodeBlock"] {
 
 .char-counter {
   text-align: right;
-  color: var(--muted);
+  color: var(--muted) !important;
   font-size: 0.8rem;
   font-family: 'JetBrains Mono', monospace;
   margin-top: -0.6rem;
@@ -155,7 +156,7 @@ code, pre, [data-testid="stCodeBlock"] {
 
 .success-banner {
   background: #E8F7F0;
-  color: #0F6B47;
+  color: #0F6B47 !important;
   border-left: 5px solid var(--success);
   border-radius: 10px;
   padding: 0.8rem 1.1rem;
@@ -207,7 +208,6 @@ TXT = {
         "api_key_valid": "API Key ใช้งานได้",
         "api_key_invalid": "API Key ไม่ถูกต้องหรือหมดอายุ",
         "api_key_error": "ตรวจสอบไม่สำเร็จ",
-        "lang_label": "🌐 ภาษา",
         "api_key_tutorial_note": "💡 ยังไม่มี API Key? คู่มือขอ Key จะเพิ่มเข้ามาเร็วๆ นี้",
         "step1_title": "STEP 1 · เลือกโครงสร้างข้อมูลที่ต้องการสกัด",
         "preset_label": "เลือกรูปแบบ (Preset)",
@@ -240,6 +240,9 @@ TXT = {
         "success_banner": "✅ สกัดข้อมูลสำเร็จภายใน {seconds} วินาที",
         "mock_note": "ตัวอย่างจำลอง ไม่ได้เรียก AI จริง",
         "copy_table_expander": "📋 คัดลอกตาราง (Copy Table)",
+        "copy_button_table": "📋 คัดลอกตาราง (TSV)",
+        "copy_button_json": "📋 คัดลอก JSON",
+        "copy_button_markdown": "📋 คัดลอก Markdown",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
@@ -274,7 +277,6 @@ TXT = {
         "api_key_valid": "API key is valid",
         "api_key_invalid": "API key is invalid or expired",
         "api_key_error": "Could not verify key",
-        "lang_label": "🌐 Language",
         "api_key_tutorial_note": "💡 Don't have a key yet? A how-to guide is coming soon",
         "step1_title": "STEP 1 · Choose the data structure to extract",
         "preset_label": "Choose a preset",
@@ -307,6 +309,9 @@ TXT = {
         "success_banner": "✅ Data extracted successfully in {seconds}s",
         "mock_note": "sample preview, no real AI call made",
         "copy_table_expander": "📋 Copy Table",
+        "copy_button_table": "📋 Copy Table (TSV)",
+        "copy_button_json": "📋 Copy JSON",
+        "copy_button_markdown": "📋 Copy Markdown",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
@@ -737,6 +742,48 @@ def records_to_markdown(records, fields):
     return "\n".join([header, sep] + rows)
 
 
+_COPY_BUTTON_TEMPLATE = """
+<div style="margin: 0.3rem 0 0.8rem 0;">
+  <textarea id="ta___KEY__" style="position:absolute; left:-9999px; top:-9999px;">__TEXT__</textarea>
+  <button id="btn___KEY__" data-original="__LABEL__"
+    style="background: var(--accent); color: var(--accent-ink); border: none;
+           border-radius: 8px; padding: 0.5rem 1.1rem; font-weight: 600;
+           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;"
+    onclick="
+      var ta = document.getElementById('ta___KEY__');
+      var btn = document.getElementById('btn___KEY__');
+      function showCopied() {
+        btn.innerText = '✅ Copied!';
+        setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(showCopied);
+      } else {
+        ta.style.position = 'fixed';
+        ta.style.left = '0';
+        ta.select();
+        document.execCommand('copy');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        showCopied();
+      }
+    ">__LABEL__</button>
+</div>
+"""
+
+
+def render_copy_button(text_to_copy, button_label, unique_key):
+    """ปุ่มคัดลอกที่มองเห็นชัดเจนตลอดเวลา (ไม่ต้องเอาเมาส์ไปชี้ถึงจะโผล่)
+    เพราะไอคอน copy ที่ติดมากับ st.code() อาจสังเกตเห็นยากสำหรับผู้ใช้บางคน"""
+    widget_html = (
+        _COPY_BUTTON_TEMPLATE
+        .replace("__TEXT__", html.escape(text_to_copy))
+        .replace("__KEY__", unique_key)
+        .replace("__LABEL__", button_label)
+    )
+    st.markdown(widget_html, unsafe_allow_html=True)
+
+
 def send_to_webhook():
     url = st.session_state.webhook_url_input.strip()
     if not url:
@@ -766,7 +813,7 @@ top_cols = st.columns([4.2, 1.3, 1.2])
 with top_cols[0]:
     st.markdown(f'<div class="logo-title">{t("app_title")}</div>', unsafe_allow_html=True)
 with top_cols[1]:
-    st.radio(t("lang_label"), ["TH", "EN"], horizontal=True, key="lang")
+    st.radio("🌐 Language / ภาษา", ["TH", "EN"], horizontal=True, key="lang")
 with top_cols[2]:
     st.markdown("<div style='height: 1.9rem;'></div>", unsafe_allow_html=True)
     if st.button(t("go_pro_button"), width="stretch", type="primary"):
@@ -897,10 +944,12 @@ if st.session_state.last_records:
         st.dataframe(pd.DataFrame(st.session_state.last_records), width="stretch", hide_index=True)
         with st.expander(t("copy_table_expander")):
             tsv_str = pd.DataFrame(st.session_state.last_records).to_csv(sep="\t", index=False)
+            render_copy_button(tsv_str, t("copy_button_table"), "tbl_copy")
             st.code(tsv_str, language=None)
 
     with tab2:
         json_str = json.dumps(st.session_state.last_records, ensure_ascii=False, indent=2)
+        render_copy_button(json_str, t("copy_button_json"), "json_copy")
         st.code(json_str, language="json")
 
     with tab3:
@@ -908,7 +957,9 @@ if st.session_state.last_records:
         st.download_button(t("download_csv"), data=csv_bytes, file_name="extracted_data.csv",
                             mime="text/csv", width="stretch")
         st.caption(t("copy_markdown_title"))
-        st.code(records_to_markdown(st.session_state.last_records, fields_used), language="markdown")
+        md_str = records_to_markdown(st.session_state.last_records, fields_used)
+        render_copy_button(md_str, t("copy_button_markdown"), "md_copy")
+        st.code(md_str, language="markdown")
         st.divider()
         if st.session_state.is_pro:
             st.text_input(t("webhook_url_label"), key="webhook_url_input",
