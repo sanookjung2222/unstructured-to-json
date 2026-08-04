@@ -176,6 +176,44 @@ code, pre, [data-testid="stCodeBlock"] {
 }
 .stButton > button[kind="primary"]:hover { filter: brightness(1.08); }
 
+/* ปุ่มรอง (secondary) ต้องกำหนดพื้นหลัง+สีตัวอักษรเองด้วย ไม่งั้นจะพึ่งสีจาก
+   ธีมของ Streamlit ซึ่งอาจกลายเป็นตัวหนังสือสีเข้ม (จากกฎด้านล่าง) บนพื้นหลัง
+   เข้มของปุ่ม (จากธีม) แล้วมองไม่เห็นข้อความในปุ่มอีกแบบหนึ่ง */
+.stButton > button:not([kind="primary"]),
+.stDownloadButton > button {
+  background-color: var(--card) !important;
+  color: var(--ink) !important;
+}
+
+/* กล่องข้อความ native ของ Streamlit ที่ไม่ได้อยู่ใน div ของเราเอง (label ของ
+   widget, st.caption, กล่อง info/warning/error, หัวข้อ expander, ชื่อแท็บ)
+   เดิมพึ่งสีจากธีมของ Streamlit เอง ซึ่งบางครั้งเป็นสีขาว — บังคับให้เป็นสีเข้ม
+   ของเราเสมอ ยืนยัน testid จากไฟล์ static ของ Streamlit เวอร์ชันนี้จริงๆ แล้ว */
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] *,
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] *,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stAlertContainer"],
+[data-testid="stAlertContent"],
+[data-testid="stAlertContainer"] *,
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary *,
+[data-testid="stExpander"] p,
+[data-testid="stTab"],
+[data-testid="stTab"] *,
+[data-testid="stTabs"] [data-baseweb="tab"],
+[data-testid="stTabs"] [data-baseweb="tab"] * {
+  color: var(--ink) !important;
+}
+
+/* แท็บที่กำลังถูกเลือกอยู่ ให้เน้นด้วยสี accent แทน เพื่อยังเห็นความต่างจากแท็บอื่น */
+[data-testid="stTab"][aria-selected="true"],
+[data-testid="stTab"][aria-selected="true"] * {
+  color: #8A5A00 !important;
+}
+
 [data-testid="stTabs"] [data-baseweb="tab"] {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
