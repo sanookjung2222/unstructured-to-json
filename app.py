@@ -299,7 +299,7 @@ TXT = {
         "success_banner": "✅ สกัดข้อมูลสำเร็จภายใน {seconds} วินาที",
         "mock_note": "ตัวอย่างจำลอง ไม่ได้เรียก AI จริง",
         "copy_table_expander": "📋 คัดลอกตาราง (Copy Table)",
-        "copy_button_table": "📋 คัดลอกตาราง (TSV)",
+        "copy_button_table": "📋 คัดลอกตาราง",
         "copy_button_json": "📋 คัดลอก JSON",
         "copy_button_markdown": "📋 คัดลอก Markdown",
         "helper_copy_table_md": "พร้อมนำไป Paste ลงใน Notion Database หรือ Obsidian ได้ทันที โดยตารางไม่เบี้ยว",
@@ -372,7 +372,7 @@ TXT = {
         "success_banner": "✅ Data extracted successfully in {seconds}s",
         "mock_note": "sample preview, no real AI call made",
         "copy_table_expander": "📋 Copy Table",
-        "copy_button_table": "📋 Copy Table (TSV)",
+        "copy_button_table": "📋 Copy Table",
         "copy_button_json": "📋 Copy JSON",
         "copy_button_markdown": "📋 Copy Markdown",
         "helper_copy_table_md": "Ready to paste straight into your Notion database or Obsidian — the table stays perfectly intact.",
@@ -807,6 +807,21 @@ def records_to_markdown(records, fields):
     return "\n".join([header, sep] + rows)
 
 
+def records_to_html_table(records, fields):
+    """สร้างตาราง HTML จริง (<table><tr><td>) แทน text ล้วน เพราะ Notion/Google
+    Sheets ต้องเจอ HTML table ถึงจะแยกช่องแถว-คอลัมน์ให้ตอน paste — แค่ text
+    คั่นด้วย tab (TSV) นั้น Google Sheets อ่านออกแต่ Notion อ่านไม่ออก"""
+    if not records:
+        return ""
+    names = [f["name"] for f in fields] if fields else list(records[0].keys())
+    thead = "<tr>" + "".join(f"<th>{html.escape(str(n))}</th>" for n in names) + "</tr>"
+    body_rows = []
+    for r in records:
+        cells = "".join(f"<td>{html.escape(str(r.get(n, '')))}</td>" for n in names)
+        body_rows.append(f"<tr>{cells}</tr>")
+    return "<table>" + thead + "".join(body_rows) + "</table>"
+
+
 _COPY_BUTTON_TEMPLATE = """
 <div style="margin: 0.3rem 0 0.8rem 0;">
   <textarea id="ta___KEY__" style="position:absolute; left:-9999px; top:-9999px;">__TEXT__</textarea>
@@ -843,6 +858,67 @@ def render_copy_button(text_to_copy, button_label, unique_key):
     widget_html = (
         _COPY_BUTTON_TEMPLATE
         .replace("__TEXT__", html.escape(text_to_copy))
+        .replace("__KEY__", unique_key)
+        .replace("__LABEL__", button_label)
+    )
+    st.markdown(widget_html, unsafe_allow_html=True)
+
+
+_COPY_TABLE_BUTTON_TEMPLATE = """
+<div style="margin: 0.3rem 0 0.8rem 0;">
+  <textarea id="tatext___KEY__" style="position:absolute; left:-9999px; top:-9999px;">__TEXT__</textarea>
+  <textarea id="tahtml___KEY__" style="position:absolute; left:-9999px; top:-9999px;">__HTML__</textarea>
+  <button id="btn___KEY__" data-original="__LABEL__"
+    style="background: var(--accent); color: var(--accent-ink); border: none;
+           border-radius: 8px; padding: 0.5rem 1.1rem; font-weight: 600;
+           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;"
+    onclick="
+      var taText = document.getElementById('tatext___KEY__');
+      var taHtml = document.getElementById('tahtml___KEY__');
+      var btn = document.getElementById('btn___KEY__');
+      function showCopied() {
+        btn.innerText = '✅ Copied!';
+        setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
+      }
+      function fallbackPlainCopy() {
+        taText.style.position = 'fixed';
+        taText.style.left = '0';
+        taText.select();
+        document.execCommand('copy');
+        taText.style.position = 'absolute';
+        taText.style.left = '-9999px';
+        showCopied();
+      }
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          var htmlBlob = new Blob([taHtml.value], { type: 'text/html' });
+          var textBlob = new Blob([taText.value], { type: 'text/plain' });
+          var item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+          navigator.clipboard.write([item]).then(showCopied).catch(fallbackPlainCopy);
+        } catch (e) {
+          fallbackPlainCopy();
+        }
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(taText.value).then(showCopied);
+      } else {
+        fallbackPlainCopy();
+      }
+    ">__LABEL__</button>
+</div>
+"""
+
+
+def render_copy_table_button(records, fields, button_label, unique_key):
+    """ปุ่มคัดลอกตารางแบบ 'สองฟอร์แมตพร้อมกันในคลิกเดียว' — ใส่ทั้ง HTML
+    <table> และ plain text (TSV) ลงคลิปบอร์ดพร้อมกัน แอปที่รับ HTML ได้
+    (Notion, Google Sheets) จะได้ตารางจริง ส่วนแอปที่รับได้แค่ข้อความล้วน
+    จะได้ TSV แทนโดยอัตโนมัติ ผู้ใช้ไม่ต้องเลือกฟอร์แมตเอง"""
+    plain_text = pd.DataFrame(records).to_csv(sep="\t", index=False) if records else ""
+    html_table = records_to_html_table(records, fields)
+    widget_html = (
+        _COPY_TABLE_BUTTON_TEMPLATE
+        .replace("__TEXT__", html.escape(plain_text))
+        .replace("__HTML__", html.escape(html_table))
         .replace("__KEY__", unique_key)
         .replace("__LABEL__", button_label)
     )
@@ -1016,7 +1092,8 @@ if st.session_state.last_records:
         st.dataframe(pd.DataFrame(st.session_state.last_records), width="stretch", hide_index=True)
         with st.expander(t("copy_table_expander")):
             tsv_str = pd.DataFrame(st.session_state.last_records).to_csv(sep="\t", index=False)
-            render_copy_button(tsv_str, t("copy_button_table"), "tbl_copy")
+            render_copy_table_button(st.session_state.last_records, fields_used,
+                                      t("copy_button_table"), "tbl_copy")
             st.caption(t("helper_copy_table_md"))
             st.code(tsv_str, language=None)
 
