@@ -81,13 +81,32 @@ code, pre, [data-testid="stCodeBlock"] {
 
 .hero-banner {
   background: linear-gradient(135deg, var(--ink) 0%, #2A2F3F 100%);
-  color: #FAFAF9 !important;
   padding: 1.4rem 1.8rem;
   border-radius: 14px;
-  font-size: 1.1rem;
-  font-weight: 500;
   margin: 0.6rem 0 1.4rem 0;
   border-left: 5px solid var(--accent);
+}
+.hero-headline {
+  color: #FAFAF9 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.hero-pain {
+  color: #A9ADBA !important;
+  font-size: 0.85rem;
+  font-style: italic;
+  font-weight: 400;
+  margin-bottom: 0.45rem;
+  line-height: 1.4;
+}
+.hero-subheadline {
+  color: #C9CCD6 !important;
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin-top: 0.5rem;
+  line-height: 1.5;
 }
 
 .zone-title {
@@ -236,7 +255,9 @@ st.markdown(f"<style>{CUSTOM_CSS}</style>", unsafe_allow_html=True)
 TXT = {
     "TH": {
         "app_title": "⚡ Text Extractor",
-        "banner": "แปลงข้อความยุ่งเหยิงให้เป็นข้อมูลมีโครงสร้างภายในไม่กี่วินาที",
+        "banner": "แปลงข้อความยุ่งเหยิง ให้กลายเป็นโครงสร้างข้อมูลที่ก๊อปปี้ไปวางแอปไหนก็ฟอร์แมตไม่พัง",
+        "hero_pain": "เบื่อไหม? Copy ข้อมูลจากไหนก็ไม่รู้ พอวางใน Notion แล้ว column เพี้ยน ต้องมานั่งไล่แก้ทีละบรรทัด",
+        "sub_banner": "ฟอร์แมตเป๊ะ สำหรับสายจดโน้ต (Notion / Obsidian), สายสเปรดชีต (Excel / Google Sheets) และสายทำระบบ Automation (Make / Zapier)",
         "api_key_label": "🔑 Anthropic API Key",
         "api_key_placeholder": "sk-ant-...",
         "check_button": "🔑 Check",
@@ -281,11 +302,13 @@ TXT = {
         "copy_button_table": "📋 คัดลอกตาราง (TSV)",
         "copy_button_json": "📋 คัดลอก JSON",
         "copy_button_markdown": "📋 คัดลอก Markdown",
+        "helper_copy_table_md": "พร้อมนำไป Paste ลงใน Notion Database หรือ Obsidian ได้ทันที โดยตารางไม่เบี้ยว",
+        "helper_download_csv": "พร้อมนำไป Import เข้า Excel / Google Sheets ได้แบบฟอร์แมตไม่พัง",
+        "helper_copy_json": "ผ่านการตรวจสอบ Syntax 100% พร้อมนำไปใช้ใน Webhook/Automation Pipeline",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
         "download_csv": "⬇️ Download CSV",
-        "copy_markdown_title": "คัดลอกไปวางใน Notion / Obsidian ได้ทันที",
         "webhook_pro_locked": "🔒 การส่งออกไปยัง Webhook / Make.com / Zapier เป็นฟีเจอร์ Pro",
         "webhook_url_label": "Webhook URL",
         "webhook_send_button": "🚀 ส่งไปยัง Webhook",
@@ -305,7 +328,9 @@ TXT = {
     },
     "EN": {
         "app_title": "⚡ Text Extractor",
-        "banner": "Transform messy text into clean structured data in seconds",
+        "banner": "Transform messy text into structured data that never breaks when pasted into any app.",
+        "hero_pain": "Tired of pasting data somewhere only to watch the formatting fall apart?",
+        "sub_banner": "Perfect formatting built for note-takers (Notion / Obsidian), spreadsheet users (Excel / Google Sheets), and automation workflows (Make / Zapier).",
         "api_key_label": "🔑 Anthropic API Key",
         "api_key_placeholder": "sk-ant-...",
         "check_button": "🔑 Check",
@@ -350,11 +375,13 @@ TXT = {
         "copy_button_table": "📋 Copy Table (TSV)",
         "copy_button_json": "📋 Copy JSON",
         "copy_button_markdown": "📋 Copy Markdown",
+        "helper_copy_table_md": "Ready to paste straight into your Notion database or Obsidian — the table stays perfectly intact.",
+        "helper_download_csv": "Ready to import into Excel / Google Sheets with formatting fully intact.",
+        "helper_copy_json": "100% syntax-validated — ready to drop into your Webhook / Automation pipeline.",
         "tab_table": "📊 Interactive Table",
         "tab_json": "💻 Raw JSON",
         "tab_export": "📥 Export Options",
         "download_csv": "⬇️ Download CSV",
-        "copy_markdown_title": "Copy and paste straight into Notion / Obsidian",
         "webhook_pro_locked": "🔒 Exporting to Webhook / Make.com / Zapier is a Pro feature",
         "webhook_url_label": "Webhook URL",
         "webhook_send_button": "🚀 Send to Webhook",
@@ -879,7 +906,14 @@ elif st.session_state.api_key_status == "invalid":
 # 9) TRUST ZONE (BANNER)
 # ============================================================
 
-st.markdown(f'<div class="hero-banner">{t("banner")}</div>', unsafe_allow_html=True)
+st.markdown(
+    f'<div class="hero-banner">'
+    f'<div class="hero-pain">{t("hero_pain")}</div>'
+    f'<div class="hero-headline">{t("banner")}</div>'
+    f'<div class="hero-subheadline">{t("sub_banner")}</div>'
+    f'</div>',
+    unsafe_allow_html=True,
+)
 
 
 # ============================================================
@@ -983,20 +1017,23 @@ if st.session_state.last_records:
         with st.expander(t("copy_table_expander")):
             tsv_str = pd.DataFrame(st.session_state.last_records).to_csv(sep="\t", index=False)
             render_copy_button(tsv_str, t("copy_button_table"), "tbl_copy")
+            st.caption(t("helper_copy_table_md"))
             st.code(tsv_str, language=None)
 
     with tab2:
         json_str = json.dumps(st.session_state.last_records, ensure_ascii=False, indent=2)
         render_copy_button(json_str, t("copy_button_json"), "json_copy")
+        st.caption(t("helper_copy_json"))
         st.code(json_str, language="json")
 
     with tab3:
         csv_bytes = pd.DataFrame(st.session_state.last_records).to_csv(index=False).encode("utf-8-sig")
         st.download_button(t("download_csv"), data=csv_bytes, file_name="extracted_data.csv",
                             mime="text/csv", width="stretch")
-        st.caption(t("copy_markdown_title"))
+        st.caption(t("helper_download_csv"))
         md_str = records_to_markdown(st.session_state.last_records, fields_used)
         render_copy_button(md_str, t("copy_button_markdown"), "md_copy")
+        st.caption(t("helper_copy_table_md"))
         st.code(md_str, language="markdown")
         st.divider()
         if st.session_state.is_pro:
