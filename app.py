@@ -841,40 +841,55 @@ _COPY_BUTTON_TEMPLATE = """
   <button id="btn___KEY__" data-original="__LABEL__"
     style="background: var(--accent); color: var(--accent-ink); border: none;
            border-radius: 8px; padding: 0.5rem 1.1rem; font-weight: 600;
-           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;"
-    onclick="
-      var ta = document.getElementById('ta___KEY__');
-      var btn = document.getElementById('btn___KEY__');
-      function showCopied() {
-        btn.innerText = '✅ Copied!';
-        setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(ta.value).then(showCopied);
-      } else {
-        ta.style.position = 'fixed';
-        ta.style.left = '0';
-        ta.select();
-        document.execCommand('copy');
-        ta.style.position = 'absolute';
-        ta.style.left = '-9999px';
-        showCopied();
-      }
-    ">__LABEL__</button>
+           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;">__LABEL__</button>
 </div>
+<script>
+(function() {
+  var ta = document.getElementById('ta___KEY__');
+  var btn = document.getElementById('btn___KEY__');
+  if (!btn || btn.dataset.bound === '1') { return; }
+  btn.dataset.bound = '1';
+  btn.addEventListener('click', function() {
+    function showCopied() {
+      btn.innerText = '✅ Copied!';
+      setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
+    }
+    function fallbackPlainCopy() {
+      ta.style.position = 'fixed';
+      ta.style.left = '0';
+      ta.select();
+      document.execCommand('copy');
+      ta.style.position = 'absolute';
+      ta.style.left = '-9999px';
+      showCopied();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(showCopied).catch(fallbackPlainCopy);
+    } else {
+      fallbackPlainCopy();
+    }
+  });
+})();
+</script>
 """
 
 
 def render_copy_button(text_to_copy, button_label, unique_key):
     """ปุ่มคัดลอกที่มองเห็นชัดเจนตลอดเวลา (ไม่ต้องเอาเมาส์ไปชี้ถึงจะโผล่)
-    เพราะไอคอน copy ที่ติดมากับ st.code() อาจสังเกตเห็นยากสำหรับผู้ใช้บางคน"""
+    เพราะไอคอน copy ที่ติดมากับ st.code() อาจสังเกตเห็นยากสำหรับผู้ใช้บางคน
+
+    สำคัญ: ใช้ st.html(unsafe_allow_javascript=True) ไม่ใช่ st.markdown() —
+    เพราะ st.markdown(unsafe_allow_html=True) จะถูก sanitizer ของ Streamlit
+    (DOMPurify) ตัด attribute onclick="..." ทิ้งอัตโนมัติเงียบๆ (ป้องกัน XSS)
+    ทำให้ปุ่มโชว์ปกติแต่กดแล้วไม่ทำอะไรเลย — ต้องผูก event ผ่าน <script> +
+    addEventListener แทน ซึ่งต้องมากับ st.html ที่เปิด unsafe_allow_javascript"""
     widget_html = (
         _COPY_BUTTON_TEMPLATE
         .replace("__TEXT__", html.escape(text_to_copy))
         .replace("__KEY__", unique_key)
         .replace("__LABEL__", button_label)
     )
-    st.markdown(widget_html, unsafe_allow_html=True)
+    st.html(widget_html, unsafe_allow_javascript=True)
 
 
 _COPY_TABLE_BUTTON_TEMPLATE = """
@@ -884,40 +899,46 @@ _COPY_TABLE_BUTTON_TEMPLATE = """
   <button id="btn___KEY__" data-original="__LABEL__"
     style="background: var(--accent); color: var(--accent-ink); border: none;
            border-radius: 8px; padding: 0.5rem 1.1rem; font-weight: 600;
-           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;"
-    onclick="
-      var taText = document.getElementById('tatext___KEY__');
-      var taHtml = document.getElementById('tahtml___KEY__');
-      var btn = document.getElementById('btn___KEY__');
-      function showCopied() {
-        btn.innerText = '✅ Copied!';
-        setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
-      }
-      function fallbackPlainCopy() {
-        taText.style.position = 'fixed';
-        taText.style.left = '0';
-        taText.select();
-        document.execCommand('copy');
-        taText.style.position = 'absolute';
-        taText.style.left = '-9999px';
-        showCopied();
-      }
-      if (navigator.clipboard && window.ClipboardItem) {
-        try {
-          var htmlBlob = new Blob([taHtml.value], { type: 'text/html' });
-          var textBlob = new Blob([taText.value], { type: 'text/plain' });
-          var item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
-          navigator.clipboard.write([item]).then(showCopied).catch(fallbackPlainCopy);
-        } catch (e) {
-          fallbackPlainCopy();
-        }
-      } else if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(taText.value).then(showCopied);
-      } else {
+           cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem;">__LABEL__</button>
+</div>
+<script>
+(function() {
+  var taText = document.getElementById('tatext___KEY__');
+  var taHtml = document.getElementById('tahtml___KEY__');
+  var btn = document.getElementById('btn___KEY__');
+  if (!btn || btn.dataset.bound === '1') { return; }
+  btn.dataset.bound = '1';
+  btn.addEventListener('click', function() {
+    function showCopied() {
+      btn.innerText = '✅ Copied!';
+      setTimeout(function() { btn.innerText = btn.getAttribute('data-original'); }, 1500);
+    }
+    function fallbackPlainCopy() {
+      taText.style.position = 'fixed';
+      taText.style.left = '0';
+      taText.select();
+      document.execCommand('copy');
+      taText.style.position = 'absolute';
+      taText.style.left = '-9999px';
+      showCopied();
+    }
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        var htmlBlob = new Blob([taHtml.value], { type: 'text/html' });
+        var textBlob = new Blob([taText.value], { type: 'text/plain' });
+        var item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+        navigator.clipboard.write([item]).then(showCopied).catch(fallbackPlainCopy);
+      } catch (e) {
         fallbackPlainCopy();
       }
-    ">__LABEL__</button>
-</div>
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(taText.value).then(showCopied).catch(fallbackPlainCopy);
+    } else {
+      fallbackPlainCopy();
+    }
+  });
+})();
+</script>
 """
 
 
@@ -927,7 +948,10 @@ def render_dual_copy_button(html_content, plain_text, button_label, unique_key):
     จะได้ตารางจริง ส่วนแอปที่รับได้แค่ข้อความล้วน (เช่น Obsidian ตอนใช้กับ
     markdown source) จะได้ plain_text ที่ส่งมาแทนโดยอัตโนมัติ ผู้ใช้ไม่ต้อง
     เลือกฟอร์แมตเอง — ผู้เรียกเป็นคนกำหนดว่า plain_text คืออะไร (TSV หรือ
-    markdown syntax) ส่วน html_content ควรผ่าน wrap_html_for_clipboard() มาก่อน"""
+    markdown syntax) ส่วน html_content ควรผ่าน wrap_html_for_clipboard() มาก่อน
+
+    ใช้ st.html(unsafe_allow_javascript=True) ด้วยเหตุผลเดียวกับ render_copy_button
+    ด้านบน — onclick attribute จะโดน sanitizer ตัดทิ้งถ้าใช้ st.markdown ธรรมดา"""
     widget_html = (
         _COPY_TABLE_BUTTON_TEMPLATE
         .replace("__TEXT__", html.escape(plain_text))
@@ -935,7 +959,7 @@ def render_dual_copy_button(html_content, plain_text, button_label, unique_key):
         .replace("__KEY__", unique_key)
         .replace("__LABEL__", button_label)
     )
-    st.markdown(widget_html, unsafe_allow_html=True)
+    st.html(widget_html, unsafe_allow_javascript=True)
 
 
 def send_to_webhook():
