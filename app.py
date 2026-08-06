@@ -822,6 +822,19 @@ def records_to_html_table(records, fields):
     return "<table>" + thead + "".join(body_rows) + "</table>"
 
 
+def wrap_html_for_clipboard(table_html):
+    """ห่อ HTML table ด้วย envelope แบบเดียวกับที่เบราว์เซอร์ใส่ให้อัตโนมัติ
+    ตอนเรา copy ตารางจริงบนหน้าเว็บด้วยเมาส์ (มี <html><body> ครบ, มี meta
+    charset, และ comment marker StartFragment/EndFragment บอกขอบเขต) — Notion
+    ตรวจสอบรูปแบบนี้อย่างเข้มงวด ถ้าได้แค่ <table> เปล่าๆ จะไม่ยอมรับว่าเป็น
+    ตาราง แล้ว fallback ไปวางเป็นก้อนข้อความก้อนเดียวแทน"""
+    return (
+        '<html><head><meta charset="utf-8"></head><body>'
+        "<!--StartFragment-->" + table_html + "<!--EndFragment-->"
+        "</body></html>"
+    )
+
+
 _COPY_BUTTON_TEMPLATE = """
 <div style="margin: 0.3rem 0 0.8rem 0;">
   <textarea id="ta___KEY__" style="position:absolute; left:-9999px; top:-9999px;">__TEXT__</textarea>
@@ -908,17 +921,17 @@ _COPY_TABLE_BUTTON_TEMPLATE = """
 """
 
 
-def render_copy_table_button(records, fields, button_label, unique_key):
-    """ปุ่มคัดลอกตารางแบบ 'สองฟอร์แมตพร้อมกันในคลิกเดียว' — ใส่ทั้ง HTML
-    <table> และ plain text (TSV) ลงคลิปบอร์ดพร้อมกัน แอปที่รับ HTML ได้
-    (Notion, Google Sheets) จะได้ตารางจริง ส่วนแอปที่รับได้แค่ข้อความล้วน
-    จะได้ TSV แทนโดยอัตโนมัติ ผู้ใช้ไม่ต้องเลือกฟอร์แมตเอง"""
-    plain_text = pd.DataFrame(records).to_csv(sep="\t", index=False) if records else ""
-    html_table = records_to_html_table(records, fields)
+def render_dual_copy_button(html_content, plain_text, button_label, unique_key):
+    """ปุ่มคัดลอกแบบ 'สองฟอร์แมตพร้อมกันในคลิกเดียว' — ใส่ทั้ง HTML และ
+    plain text ลงคลิปบอร์ดพร้อมกัน แอปที่รับ HTML ได้ (Notion, Google Sheets)
+    จะได้ตารางจริง ส่วนแอปที่รับได้แค่ข้อความล้วน (เช่น Obsidian ตอนใช้กับ
+    markdown source) จะได้ plain_text ที่ส่งมาแทนโดยอัตโนมัติ ผู้ใช้ไม่ต้อง
+    เลือกฟอร์แมตเอง — ผู้เรียกเป็นคนกำหนดว่า plain_text คืออะไร (TSV หรือ
+    markdown syntax) ส่วน html_content ควรผ่าน wrap_html_for_clipboard() มาก่อน"""
     widget_html = (
         _COPY_TABLE_BUTTON_TEMPLATE
         .replace("__TEXT__", html.escape(plain_text))
-        .replace("__HTML__", html.escape(html_table))
+        .replace("__HTML__", html.escape(html_content))
         .replace("__KEY__", unique_key)
         .replace("__LABEL__", button_label)
     )
@@ -1092,8 +1105,10 @@ if st.session_state.last_records:
         st.dataframe(pd.DataFrame(st.session_state.last_records), width="stretch", hide_index=True)
         with st.expander(t("copy_table_expander")):
             tsv_str = pd.DataFrame(st.session_state.last_records).to_csv(sep="\t", index=False)
-            render_copy_table_button(st.session_state.last_records, fields_used,
-                                      t("copy_button_table"), "tbl_copy")
+            table_html = wrap_html_for_clipboard(
+                records_to_html_table(st.session_state.last_records, fields_used)
+            )
+            render_dual_copy_button(table_html, tsv_str, t("copy_button_table"), "tbl_copy")
             st.caption(t("helper_copy_table_md"))
             st.code(tsv_str, language=None)
 
@@ -1109,7 +1124,10 @@ if st.session_state.last_records:
                             mime="text/csv", width="stretch")
         st.caption(t("helper_download_csv"))
         md_str = records_to_markdown(st.session_state.last_records, fields_used)
-        render_copy_button(md_str, t("copy_button_markdown"), "md_copy")
+        md_table_html = wrap_html_for_clipboard(
+            records_to_html_table(st.session_state.last_records, fields_used)
+        )
+        render_dual_copy_button(md_table_html, md_str, t("copy_button_markdown"), "md_copy")
         st.caption(t("helper_copy_table_md"))
         st.code(md_str, language="markdown")
         st.divider()
