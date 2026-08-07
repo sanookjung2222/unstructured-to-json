@@ -302,7 +302,8 @@ TXT = {
         "copy_button_table": "📋 คัดลอกตาราง",
         "copy_button_json": "📋 คัดลอก JSON",
         "copy_button_markdown": "📋 คัดลอก Markdown",
-        "helper_copy_table_md": "พร้อมนำไป Paste ลงใน Notion Database หรือ Obsidian ได้ทันที โดยตารางไม่เบี้ยว",
+        "helper_copy_table_md": "พร้อมนำไป Paste ลงใน Notion Database หรือ Google Sheets ได้ทันที โดยตารางไม่เบี้ยว",
+        "helper_copy_markdown_obsidian": "พร้อมนำไป Paste ลงใน Obsidian ได้ทันที โดย syntax markdown ไม่เพี้ยน",
         "helper_download_csv": "พร้อมนำไป Import เข้า Excel / Google Sheets ได้แบบฟอร์แมตไม่พัง",
         "helper_copy_json": "ผ่านการตรวจสอบ Syntax 100% พร้อมนำไปใช้ใน Webhook/Automation Pipeline",
         "tab_table": "📊 Interactive Table",
@@ -375,7 +376,8 @@ TXT = {
         "copy_button_table": "📋 Copy Table",
         "copy_button_json": "📋 Copy JSON",
         "copy_button_markdown": "📋 Copy Markdown",
-        "helper_copy_table_md": "Ready to paste straight into your Notion database or Obsidian — the table stays perfectly intact.",
+        "helper_copy_table_md": "Ready to paste straight into your Notion database or Google Sheets — the table stays perfectly intact.",
+        "helper_copy_markdown_obsidian": "Ready to paste straight into Obsidian — the markdown syntax stays intact.",
         "helper_download_csv": "Ready to import into Excel / Google Sheets with formatting fully intact.",
         "helper_copy_json": "100% syntax-validated — ready to drop into your Webhook / Automation pipeline.",
         "tab_table": "📊 Interactive Table",
@@ -810,16 +812,28 @@ def records_to_markdown(records, fields):
 def records_to_html_table(records, fields):
     """สร้างตาราง HTML จริง (<table><tr><td>) แทน text ล้วน เพราะ Notion/Google
     Sheets ต้องเจอ HTML table ถึงจะแยกช่องแถว-คอลัมน์ให้ตอน paste — แค่ text
-    คั่นด้วย tab (TSV) นั้น Google Sheets อ่านออกแต่ Notion อ่านไม่ออก"""
+    คั่นด้วย tab (TSV) นั้น Google Sheets อ่านออกแต่ Notion อ่านไม่ออก
+
+    ใส่ <thead>/<tbody> ครบและมี inline border ไว้ด้วย เผื่อตัว parser ของ
+    แอปปลายทางใช้โครงสร้าง/สไตล์เป็นสัญญาณว่า 'นี่คือตารางจริง' ไม่ใช่แค่
+    ข้อความที่บังเอิญมีแท็ก table"""
     if not records:
         return ""
     names = [f["name"] for f in fields] if fields else list(records[0].keys())
-    thead = "<tr>" + "".join(f"<th>{html.escape(str(n))}</th>" for n in names) + "</tr>"
+    cell_style = "border:1px solid #999;padding:4px 8px;"
+    thead = (
+        "<thead><tr>"
+        + "".join(f'<th style="{cell_style}">{html.escape(str(n))}</th>' for n in names)
+        + "</tr></thead>"
+    )
     body_rows = []
     for r in records:
-        cells = "".join(f"<td>{html.escape(str(r.get(n, '')))}</td>" for n in names)
+        cells = "".join(
+            f'<td style="{cell_style}">{html.escape(str(r.get(n, "")))}</td>' for n in names
+        )
         body_rows.append(f"<tr>{cells}</tr>")
-    return "<table>" + thead + "".join(body_rows) + "</table>"
+    tbody = "<tbody>" + "".join(body_rows) + "</tbody>"
+    return f'<table style="border-collapse:collapse;">{thead}{tbody}</table>'
 
 
 def wrap_html_for_clipboard(table_html):
@@ -1148,11 +1162,8 @@ if st.session_state.last_records:
                             mime="text/csv", width="stretch")
         st.caption(t("helper_download_csv"))
         md_str = records_to_markdown(st.session_state.last_records, fields_used)
-        md_table_html = wrap_html_for_clipboard(
-            records_to_html_table(st.session_state.last_records, fields_used)
-        )
-        render_dual_copy_button(md_table_html, md_str, t("copy_button_markdown"), "md_copy")
-        st.caption(t("helper_copy_table_md"))
+        render_copy_button(md_str, t("copy_button_markdown"), "md_copy")
+        st.caption(t("helper_copy_markdown_obsidian"))
         st.code(md_str, language="markdown")
         st.divider()
         if st.session_state.is_pro:
