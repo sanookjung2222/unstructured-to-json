@@ -1231,19 +1231,30 @@ if st.session_state.is_pro:
             st.session_state.app_api_key = None
             st.rerun()
 
-        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier
+        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier (ปรับฟอร์แมตเรียงลงมาแล้ว)
         with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
             st.markdown(f"""
-            ในการตั้งค่า HTTP Module ให้ระบุข้อมูลดังนี้:
-            
-            **1. URL:** `https://api.yourdomain.com/v1/extract` *(แก้ไขเป็น URL API จริงของเราทีหลัง)*
-            **2. Method:** `POST`
-            **3. Headers (สำคัญมาก):**
-            ต้องแนบ Key ทั้ง 2 ตัว เพื่อความปลอดภัยและเพื่อใช้โควตา AI ของคุณเอง
-            - `X-App-Key`: `{st.session_state.app_api_key}`
-            - `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(ใส่ Anthropic API Key ของคุณ)*
-            - `Content-Type`: `application/json`
-            
+            ในการตั้งค่า HTTP Module ให้ระบุข้อมูลเรียงตามลำดับดังนี้:
+
+            ---
+
+            **1. URL:**  
+            `https://api.yourdomain.com/v1/extract` *(แก้ไขเป็น URL จริงของเราทีหลัง)*
+
+            ---
+
+            **2. Method:**  
+            `POST`
+
+            ---
+
+            **3. Headers (ระบุให้ครบทั้ง 3 ค่า):**  
+            * `X-App-Key`: `{st.session_state.app_api_key}`  
+            * `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(ใส่ Anthropic API Key ของคุณ)*  
+            * `Content-Type`: `application/json`
+
+            ---
+
             **4. Body (รูปแบบ JSON):**
             ```json
             {{
