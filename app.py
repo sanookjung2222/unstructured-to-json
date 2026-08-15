@@ -589,7 +589,13 @@ for _k, _v in _DEFAULTS.items():
         st.session_state[_k] = _v
 if "app_api_key" not in st.session_state:
     st.session_state.app_api_key = None
-
+with st.expander("📖 วิธีขอ Anthropic API Key (คลิกเพื่อดู)"):
+    st.markdown("""
+    1. เข้าไปที่เว็บ [console.anthropic.com](https://console.anthropic.com/)
+    2. สมัครสมาชิก หรือ Log in เข้าสู่ระบบ
+    3. ไปที่เมนู **API Keys** แล้วกด **Create Key**
+    4. คัดลอกรหัสที่ขึ้นต้นด้วย `sk-ant-...` นำมาวางในช่องกรอกด้านบนได้เลยครับ
+    """)
 # ============================================================
 # 7) ฟังก์ชันช่วยเหลือ (HELPERS)
 # ============================================================
