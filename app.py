@@ -21,6 +21,7 @@ Text Extractor — MVP (Single-file Streamlit app)
 """
 
 import streamlit as st
+import secrets
 import anthropic
 import pandas as pd
 import requests
@@ -995,6 +996,8 @@ def activate_pro():
     ok, msg = verify_gumroad_license(st.session_state.license_key_input)
     st.session_state.is_pro = ok
     st.session_state.license_message = msg
+   if "app_api_key" not in st.session_state:
+    st.session_state.app_api_key = None
 
 
 # ============================================================
@@ -1195,3 +1198,53 @@ else:
     if st.session_state.license_message:
         icon = "✅" if st.session_state.is_pro else "❌"
         st.caption(f"{icon} {st.session_state.license_message}")
+st.divider()
+st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
+
+# เช็กว่าเป็น Pro หรือไม่ (ถ้าใช่ ให้แสดงระบบ / ถ้าไม่ใช่ ให้ล็อก)
+if st.session_state.is_pro:
+    st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
+
+    # ถ้ายังไม่มี Key
+    if st.session_state.app_api_key is None:
+        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        if st.button("⚡ Generate App API Key", type="primary"):
+            # สุ่มสร้าง Key ใหม่
+            st.session_state.app_api_key = "sk_live_" + secrets.token_hex(16)
+            st.rerun() # รีเฟรชหน้าเว็บเพื่อให้แสดง Key
+            
+    # ถ้ามี Key แล้ว
+    else:
+        st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
+        # แสดง Key ในกล่องข้อความให้ก๊อปปี้ง่ายๆ
+        st.code(st.session_state.app_api_key, language="bash")
+        
+        # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
+        if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
+            st.session_state.app_api_key = None
+            st.rerun()
+
+        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier
+        with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
+            st.markdown(f"""
+            ในการตั้งค่า HTTP Module ให้ระบุข้อมูลดังนี้:
+            
+            **1. URL:** `https://api.yourdomain.com/v1/extract` *(แก้ไขเป็น URL API จริงของเราทีหลัง)*
+            **2. Method:** `POST`
+            **3. Headers (สำคัญมาก):**
+            ต้องแนบ Key ทั้ง 2 ตัว เพื่อความปลอดภัยและเพื่อใช้โควตา AI ของคุณเอง
+            - `X-App-Key`: `{st.session_state.app_api_key}`
+            - `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(ใส่ Anthropic API Key ของคุณ)*
+            - `Content-Type`: `application/json`
+            
+            **4. Body (รูปแบบ JSON):**
+            ```json
+            {{
+              "text": "ข้อความยาวๆ ที่ต้องการแปลง...",
+              "preset": "meeting_notes"
+            }}
+            ```
+            """)
+else:
+    # กรณีไม่ใช่ Pro (หรือปิด Dev Bypass อยู่)
+    st.warning("🔒 ฟีเจอร์ API Service (เชื่อมต่อ Make/Zapier) เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
