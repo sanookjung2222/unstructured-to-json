@@ -582,13 +582,13 @@ _DEFAULTS = {
     "license_key_input": "",
     "license_message": "",
     "webhook_url_input": "",
-   if "app_api_key" not in st.session_state:
-    st.session_state.app_api_key = None
+   
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
-
+if "app_api_key" not in st.session_state:
+    st.session_state.app_api_key = None
 
 # ============================================================
 # 7) ฟังก์ชันช่วยเหลือ (HELPERS)
