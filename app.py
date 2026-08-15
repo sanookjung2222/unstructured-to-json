@@ -582,6 +582,8 @@ _DEFAULTS = {
     "license_key_input": "",
     "license_message": "",
     "webhook_url_input": "",
+   if "app_api_key" not in st.session_state:
+    st.session_state.app_api_key = None
 }
 for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
@@ -996,7 +998,6 @@ def activate_pro():
     ok, msg = verify_gumroad_license(st.session_state.license_key_input)
     st.session_state.is_pro = ok
     st.session_state.license_message = msg
-   if "app_api_key" not in st.session_state:
     st.session_state.app_api_key = None
 
 
