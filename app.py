@@ -568,7 +568,7 @@ _DEFAULTS = {
     "api_key_input": "",
     "api_key_status": None,       # None | "valid" | "invalid"
     "api_key_message": "",
-    "is_pro": False,
+    "is_pro": True,
     "preset_choice": None,
     "custom_field_ids": [0, 1, 2],
     "next_field_id": 3,
