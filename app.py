@@ -268,7 +268,6 @@ TXT = {
         "api_key_valid": "API Key ใช้งานได้",
         "api_key_invalid": "API Key ไม่ถูกต้องหรือหมดอายุ",
         "api_key_error": "ตรวจสอบไม่สำเร็จ",
-        "api_key_tutorial_note": "💡 ยังไม่มี API Key? คู่มือขอ Key จะเพิ่มเข้ามาเร็วๆ นี้",
         "step1_title": "STEP 1 · เลือกโครงสร้างข้อมูลที่ต้องการสกัด",
         "preset_label": "เลือกรูปแบบ (Preset)",
         "preset_placeholder": "👇 เลือกรูปแบบที่ต้องการ (Preset)",
@@ -342,7 +341,6 @@ TXT = {
         "api_key_valid": "API key is valid",
         "api_key_invalid": "API key is invalid or expired",
         "api_key_error": "Could not verify key",
-        "api_key_tutorial_note": "💡 Don't have a key yet? A how-to guide is coming soon",
         "step1_title": "STEP 1 · Choose the data structure to extract",
         "preset_label": "Choose a preset",
         "preset_placeholder": "👇 Choose the preset you'd like to use",
@@ -1025,7 +1023,6 @@ with key_cols[1]:
         ok, msg = check_api_key(st.session_state.api_key_input)
         st.session_state.api_key_status = "valid" if ok else "invalid"
         st.session_state.api_key_message = msg
-st.caption(t("api_key_tutorial_note"))
 with st.expander("📖 วิธีขอ Anthropic API Key (คลิกเพื่อดู)"):
     st.markdown("""
     1. เข้าไปที่เว็บ [console.anthropic.com](https://console.anthropic.com/)
