@@ -1032,6 +1032,13 @@ with key_cols[1]:
         st.session_state.api_key_status = "valid" if ok else "invalid"
         st.session_state.api_key_message = msg
 st.caption(t("api_key_tutorial_note"))
+with st.expander("📖 วิธีขอ Anthropic API Key (คลิกเพื่อดู)"):
+    st.markdown("""
+    1. เข้าไปที่เว็บ [console.anthropic.com](https://console.anthropic.com/)
+    2. สมัครสมาชิก หรือ Log in เข้าสู่ระบบ
+    3. ไปที่เมนู **API Keys** แล้วกด **Create Key**
+    4. คัดลอกรหัสที่ขึ้นต้นด้วย `sk-ant-...` นำมาวางในช่องกรอกด้านบนได้เลยครับ
+    """)
 
 if st.session_state.api_key_status == "valid":
     st.caption(f"✅ {st.session_state.api_key_message}")
@@ -1188,23 +1195,9 @@ if st.session_state.last_records:
 # 13) CONVERSION ZONE — ปลดล็อก Pro
 # ============================================================
 
-st.divider()
-st.markdown(f'<div class="zone-title">{t("conversion_title")}</div>', unsafe_allow_html=True)
-
-if st.session_state.is_pro:
-    st.success(t("pro_active_badge"))
-else:
-    if not GUMROAD_PRODUCT_ID:
-        st.caption(f"⚠️ {t('license_not_configured')}")
-    lic_col1, lic_col2 = st.columns([3, 1])
-    with lic_col1:
-        st.text_input(t("license_key_label"), key="license_key_input",
-                      placeholder=t("license_key_placeholder"), label_visibility="collapsed")
-    with lic_col2:
-        st.button(t("activate_button"), type="primary", width="stretch", on_click=activate_pro)
-    if st.session_state.license_message:
-        icon = "✅" if st.session_state.is_pro else "❌"
-        st.caption(f"{icon} {st.session_state.license_message}")
+# ============================================================
+# 14) DEVELOPER API (HEADLESS ENGINE) - โซนสำหรับ Make/Zapier
+# ============================================================
 st.divider()
 st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
 
