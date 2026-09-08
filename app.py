@@ -1232,22 +1232,6 @@ if st.session_state.is_pro:
             revoke_app_api_key(lic_key)
             st.session_state.app_api_key = None
             st.rerun()
-            
-    # ถ้ามี Key แล้ว
-    else:
-        st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
-        # แสดง Key ในกล่องข้อความให้ก๊อปปี้ง่ายๆ
-        st.code(st.session_state.app_api_key, language="bash")
-        
-      # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
-        if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
-            from database import revoke_app_api_key
-            lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
-            
-            # ลบออกจาก Database
-            revoke_app_api_key(lic_key)
-            st.session_state.app_api_key = None
-            st.rerun()
 
         # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier (ปรับฟอร์แมตเรียงลงมาแล้ว)
         with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
