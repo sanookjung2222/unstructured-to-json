@@ -1206,7 +1206,7 @@ if st.session_state.is_pro:
     # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
-       if st.button("⚡ Generate App API Key", type="primary"):
+        if st.button("⚡ Generate App API Key", type="primary"):
             from database import save_app_api_key
             # ใช้ 'dev_local' เป็น License จำลองกรณีทดสอบในเครื่องโดยไม่ใส่ License
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
@@ -1215,6 +1215,22 @@ if st.session_state.is_pro:
             # บันทึกลง Database
             save_app_api_key(lic_key, new_key)
             st.session_state.app_api_key = new_key
+            st.rerun()
+            
+    # ถ้ามี Key แล้ว
+    else:
+        st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
+        # แสดง Key ในกล่องข้อความให้ก๊อปปี้ง่ายๆ
+        st.code(st.session_state.app_api_key, language="bash")
+        
+        # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
+        if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
+            from database import revoke_app_api_key
+            lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
+            
+            # ลบออกจาก Database
+            revoke_app_api_key(lic_key)
+            st.session_state.app_api_key = None
             st.rerun()
             
     # ถ้ามี Key แล้ว
