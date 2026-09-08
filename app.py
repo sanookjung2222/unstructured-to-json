@@ -993,10 +993,17 @@ def send_to_webhook():
 
 
 def activate_pro():
+    from database import get_app_key_by_license
     ok, msg = verify_gumroad_license(st.session_state.license_key_input)
     st.session_state.is_pro = ok
     st.session_state.license_message = msg
-    st.session_state.app_api_key = None
+    
+    if ok:
+        # ดึง Key เก่าจาก DB ถ้ามี
+        existing_key = get_app_key_by_license(st.session_state.license_key_input)
+        st.session_state.app_api_key = existing_key
+    else:
+        st.session_state.app_api_key = None
 
 
 # ============================================================
@@ -1199,10 +1206,16 @@ if st.session_state.is_pro:
     # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
-        if st.button("⚡ Generate App API Key", type="primary"):
-            # สุ่มสร้าง Key ใหม่
-            st.session_state.app_api_key = "sk_live_" + secrets.token_hex(16)
-            st.rerun() # รีเฟรชหน้าเว็บเพื่อให้แสดง Key
+       if st.button("⚡ Generate App API Key", type="primary"):
+            from database import save_app_api_key
+            # ใช้ 'dev_local' เป็น License จำลองกรณีทดสอบในเครื่องโดยไม่ใส่ License
+            lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
+            new_key = "sk_live_" + secrets.token_hex(16)
+            
+            # บันทึกลง Database
+            save_app_api_key(lic_key, new_key)
+            st.session_state.app_api_key = new_key
+            st.rerun()
             
     # ถ้ามี Key แล้ว
     else:
@@ -1210,8 +1223,13 @@ if st.session_state.is_pro:
         # แสดง Key ในกล่องข้อความให้ก๊อปปี้ง่ายๆ
         st.code(st.session_state.app_api_key, language="bash")
         
-        # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
+      # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
         if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
+            from database import revoke_app_api_key
+            lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
+            
+            # ลบออกจาก Database
+            revoke_app_api_key(lic_key)
             st.session_state.app_api_key = None
             st.rerun()
 
