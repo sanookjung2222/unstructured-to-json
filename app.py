@@ -30,7 +30,7 @@ import re
 import time
 import os
 import html
-
+from core import build_extraction_prompt, parse_json_array
 
 # ============================================================
 # 1) ตั้งค่าเริ่มต้นของหน้าเว็บ (PAGE CONFIG)
@@ -671,60 +671,6 @@ def check_api_key(api_key):
         return False, f"{t('api_key_error')}: {e}"
 
 
-def build_extraction_prompt(fields, raw_text, lang):
-    lines = []
-    for f in fields:
-        desc = f.get("desc_th" if lang == "TH" else "desc_en") or f"the value for {f['name']}"
-        lines.append(f'- "{f["name"]}": {desc}')
-    field_block = "\n".join(lines)
-    field_names = [f["name"] for f in fields]
-    return f"""You are a precise data-extraction engine. Read the raw text below and extract the requested fields.
-
-Rules:
-- Return ONLY a valid JSON array of objects. No markdown formatting, no code fences, no explanation before or after.
-- Each object must contain exactly these keys: {field_names}
-- If the raw text clearly describes multiple distinct items/records, return one object per item.
-- If it describes only one item, return an array containing exactly one object.
-- If a field's value cannot be found in the text, use an empty string "" for that field. Never invent facts that are not in the text.
-- Keep field values concise and in the same language as the raw text.
-
-Fields to extract:
-{field_block}
-
-Raw text:
-\"\"\"
-{raw_text}
-\"\"\"
-
-Respond with the JSON array only."""
-
-
-def call_claude_extract(api_key, fields, raw_text, lang):
-    client = anthropic.Anthropic(api_key=api_key)
-    prompt = build_extraction_prompt(fields, raw_text, lang)
-    start = time.time()
-    message = client.messages.create(
-        model=DEFAULT_MODEL,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    elapsed = time.time() - start
-    raw_output = "".join(
-        block.text for block in message.content if getattr(block, "type", "") == "text"
-    )
-    return raw_output, elapsed
-
-
-def parse_json_array(raw_output):
-    cleaned = raw_output.strip()
-    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
-    cleaned = re.sub(r"\s*```$", "", cleaned)
-    data = json.loads(cleaned.strip())
-    if isinstance(data, dict):
-        data = [data]
-    if not isinstance(data, list):
-        raise ValueError("Expected a JSON array")
-    return data
 
 
 def do_convert():
