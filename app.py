@@ -1145,6 +1145,17 @@ if st.session_state.last_records:
 st.divider()
 st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
 
+# ถ้ายังไม่มี Key
+    if st.session_state.app_api_key is None:
+        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        
+        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
+        import database
+        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
+        # ----------------------------------------
+
+        if st.button("⚡ Generate App API Key", type="primary"):
+           
 # เช็กว่าเป็น Pro หรือไม่ (ถ้าใช่ ให้แสดงระบบ / ถ้าไม่ใช่ ให้ล็อก)
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
@@ -1216,13 +1227,4 @@ else:
     st.warning("🔒 ฟีเจอร์ API Service (เชื่อมต่อ Make/Zapier) เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
 
 
-# ถ้ายังไม่มี Key
-    if st.session_state.app_api_key is None:
-        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
-        
-        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
-        import database
-        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
-        # ----------------------------------------
 
-        if st.button("⚡ Generate App API Key", type="primary"):
