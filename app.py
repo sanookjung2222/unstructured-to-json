@@ -1214,3 +1214,15 @@ if st.session_state.is_pro:
 else:
     # กรณีไม่ใช่ Pro (หรือปิด Dev Bypass อยู่)
     st.warning("🔒 ฟีเจอร์ API Service (เชื่อมต่อ Make/Zapier) เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
+
+
+# ถ้ายังไม่มี Key
+    if st.session_state.app_api_key is None:
+        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        
+        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
+        import database
+        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
+        # ----------------------------------------
+
+        if st.button("⚡ Generate App API Key", type="primary"):
