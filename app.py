@@ -1145,37 +1145,19 @@ if st.session_state.last_records:
 st.divider()
 st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
 
-# ถ้ายังไม่มี Key
-    if st.session_state.app_api_key is None:
-        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
-        
-        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
-        import database
-        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
-        # ----------------------------------------
-
-        if st.button("⚡ Generate App API Key", type="primary"):
-           
 # เช็กว่าเป็น Pro หรือไม่ (ถ้าใช่ ให้แสดงระบบ / ถ้าไม่ใช่ ให้ล็อก)
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
-
-   
-   # ถ้ายังไม่มี Key
-    if st.session_state.app_api_key is None:
-        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
-        
-        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
-        import database
-        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
-        # ----------------------------------------
-
-        if st.button("⚡ Generate App API Key", type="primary"):
-
-           
+            
     # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        
+        # --- เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ชั่วคราว ---
+        import database
+        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
+        # ----------------------------------------
+        
         if st.button("⚡ Generate App API Key", type="primary"):
             from database import save_app_api_key
             # ใช้ 'dev_local' เป็น License จำลองกรณีทดสอบในเครื่องโดยไม่ใส่ License
@@ -1203,7 +1185,7 @@ if st.session_state.is_pro:
             st.session_state.app_api_key = None
             st.rerun()
 
-        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier (ปรับฟอร์แมตเรียงลงมาแล้ว)
+        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier
         with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
             st.markdown(f"""
             ในการตั้งค่า HTTP Module ให้ระบุข้อมูลเรียงตามลำดับดังนี้:
@@ -1222,7 +1204,7 @@ if st.session_state.is_pro:
 
             **3. Headers (ระบุให้ครบทั้ง 3 ค่า):**  
             * `X-App-Key`: `{st.session_state.app_api_key}`  
-            * `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(ใส่ Anthropic API Key ของคุณ)*  
+            * `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(หรือ X-OpenAI-Key)*  
             * `Content-Type`: `application/json`
 
             ---
@@ -1238,6 +1220,3 @@ if st.session_state.is_pro:
 else:
     # กรณีไม่ใช่ Pro (หรือปิด Dev Bypass อยู่)
     st.warning("🔒 ฟีเจอร์ API Service (เชื่อมต่อ Make/Zapier) เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
-
-
-
