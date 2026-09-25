@@ -1160,6 +1160,19 @@ st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
 
+   
+   # ถ้ายังไม่มี Key
+    if st.session_state.app_api_key is None:
+        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        
+        # --- เริ่ม: เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ---
+        import database
+        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
+        # ----------------------------------------
+
+        if st.button("⚡ Generate App API Key", type="primary"):
+
+           
     # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
