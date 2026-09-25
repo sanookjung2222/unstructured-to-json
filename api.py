@@ -245,3 +245,24 @@ def check_keys():
     rows = cursor.fetchall()
     conn.close()
     return {"saved_keys_in_system": [dict(r) for r in rows]}
+
+from pydantic import BaseModel
+import secrets
+
+class KeyActionRequest(BaseModel):
+    license_key: str
+
+@app.post("/v1/internal/generate-key")
+def internal_generate_key(req: KeyActionRequest):
+    """ให้ FastAPI เป็นคนสร้างและเซฟคีย์ลง DB เอง (แก้ปัญหาไฟล์แยกร่าง)"""
+    from database import save_app_api_key
+    new_key = "sk_live_" + secrets.token_hex(16)
+    save_app_api_key(req.license_key, new_key)
+    return {"new_key": new_key}
+
+@app.post("/v1/internal/revoke-key")
+def internal_revoke_key(req: KeyActionRequest):
+    """ให้ FastAPI เป็นคนลบคีย์ออกจาก DB"""
+    from database import revoke_app_api_key
+    revoke_app_api_key(req.license_key)
+    return {"status": "success"}
