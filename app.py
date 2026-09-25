@@ -1159,7 +1159,7 @@ if st.session_state.is_pro:
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
             # ส่งคำสั่งไปให้ FastAPI สร้างและบันทึกคีย์ให้ (แก้ปัญหาแย่งกันเขียนไฟล์)
-            resp = requests.post("http://127.0.0.1:8000/v1/system/generate-key", json={"license_key": lic_key})
+            resp = requests.post("https://twice-truck-hug.ngrok-free.dev/v1/system/generate-key", json={"license_key": lic_key})
             new_key = resp.json().get("app_api_key")
             
             st.session_state.app_api_key = new_key
@@ -1176,7 +1176,7 @@ if st.session_state.is_pro:
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
             # ส่งคำสั่งไปให้ FastAPI ลบคีย์ให้
-            requests.post("http://127.0.0.1:8000/v1/system/revoke-key", json={"license_key": lic_key})
+            requests.post("[https://twice-truck-hug.ngrok-free.dev/v1/system/revoke-key", json={"license_key": lic_key})
             
             st.session_state.app_api_key = None
             st.rerun()
