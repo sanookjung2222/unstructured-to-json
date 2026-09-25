@@ -1145,7 +1145,8 @@ if st.session_state.last_records:
 st.divider()
 st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
 
-# เช็กว่าเป็น Pro หรือไม่ (ถ้าใช่ ให้แสดงระบบ / ถ้าไม่ใช่ ให้ล็อก)
+import requests
+
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
             
@@ -1153,70 +1154,38 @@ if st.session_state.is_pro:
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
         
-        # --- เพิ่ม 2 บรรทัดนี้เพื่อเช็ก Path ชั่วคราว ---
-        import database
-        st.caption(f"💾 **กำลังบันทึกข้อมูลลงที่:** `{database.DB_PATH}`")
-        # ----------------------------------------
-        
         if st.button("⚡ Generate App API Key", type="primary"):
-            from database import save_app_api_key
-            # ใช้ 'dev_local' เป็น License จำลองกรณีทดสอบในเครื่องโดยไม่ใส่ License
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
-            new_key = "sk_live_" + secrets.token_hex(16)
             
-            # บันทึกลง Database
-            save_app_api_key(lic_key, new_key)
-            st.session_state.app_api_key = new_key
-            st.rerun()
+            # 🚀 สั่งให้ FastAPI สร้างคีย์ให้ แทนที่จะเซฟเอง!
+            try:
+                resp = requests.post("http://127.0.0.1:8000/v1/internal/generate-key", json={"license_key": lic_key})
+                if resp.ok:
+                    st.session_state.app_api_key = resp.json()["new_key"]
+                    st.rerun()
+                else:
+                    st.error("สร้างคีย์ไม่สำเร็จ (เซิร์ฟเวอร์หลังบ้านอาจปิดอยู่)")
+            except Exception as e:
+                st.error("กรุณาเปิดรัน FastAPI (uvicorn) ก่อนกดสร้างคีย์")
             
     # ถ้ามี Key แล้ว
     else:
         st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
-        # แสดง Key ในกล่องข้อความให้ก๊อปปี้ง่ายๆ
         st.code(st.session_state.app_api_key, language="bash")
         
-        # ปุ่มลบ/รีเซ็ต Key กรณีทำหลุด
         if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
-            from database import revoke_app_api_key
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
-            # ลบออกจาก Database
-            revoke_app_api_key(lic_key)
-            st.session_state.app_api_key = None
-            st.rerun()
+            # 🚀 สั่งให้ FastAPI ลบคีย์ให้
+            try:
+                requests.post("http://127.0.0.1:8000/v1/internal/revoke-key", json={"license_key": lic_key})
+                st.session_state.app_api_key = None
+                st.rerun()
+            except:
+                st.error("ลบคีย์ไม่สำเร็จ กรุณาเช็ก FastAPI")
 
-        # คู่มืออธิบายให้ลูกค้าก๊อปไปตั้งค่าใน Make/Zapier
+        # คู่มือ Zapier... (ละไว้ โค้ดเดิมของคุณได้เลย)
         with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
-            st.markdown(f"""
-            ในการตั้งค่า HTTP Module ให้ระบุข้อมูลเรียงตามลำดับดังนี้:
-
-            ---
-
-            **1. URL:**  
-            `https://api.yourdomain.com/v1/extract` *(แก้ไขเป็น URL จริงของเราทีหลัง)*
-
-            ---
-
-            **2. Method:**  
-            `POST`
-
-            ---
-
-            **3. Headers (ระบุให้ครบทั้ง 3 ค่า):**  
-            * `X-App-Key`: `{st.session_state.app_api_key}`  
-            * `X-Anthropic-Key`: `sk-ant-xxxxxxxxxxxxxxx` *(หรือ X-OpenAI-Key)*  
-            * `Content-Type`: `application/json`
-
-            ---
-
-            **4. Body (รูปแบบ JSON):**
-            ```json
-            {{
-              "text": "ข้อความยาวๆ ที่ต้องการแปลง...",
-              "preset": "meeting_notes"
-            }}
-            ```
-            """)
+            st.markdown(f"**URL:** `https://your-ngrok-url/v1/extract` \n\n**X-App-Key:** `{st.session_state.app_api_key}`")
 else:
-    # กรณีไม่ใช่ Pro (หรือปิด Dev Bypass อยู่)
-    st.warning("🔒 ฟีเจอร์ API Service (เชื่อมต่อ Make/Zapier) เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
+    st.warning("🔒 ฟีเจอร์ API Service เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
