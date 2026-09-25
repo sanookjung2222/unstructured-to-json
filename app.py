@@ -1150,40 +1150,36 @@ import requests
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
             
-    # ถ้ายังไม่มี Key
+   # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
         
         if st.button("⚡ Generate App API Key", type="primary"):
+            import requests
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
-            # 🚀 สั่งให้ FastAPI สร้างคีย์ให้ แทนที่จะเซฟเอง!
-            try:
-                resp = requests.post("http://127.0.0.1:8000/v1/internal/generate-key", json={"license_key": lic_key})
-                if resp.ok:
-                    st.session_state.app_api_key = resp.json()["new_key"]
-                    st.rerun()
-                else:
-                    st.error("สร้างคีย์ไม่สำเร็จ (เซิร์ฟเวอร์หลังบ้านอาจปิดอยู่)")
-            except Exception as e:
-                st.error("กรุณาเปิดรัน FastAPI (uvicorn) ก่อนกดสร้างคีย์")
+            # ส่งคำสั่งไปให้ FastAPI สร้างและบันทึกคีย์ให้ (แก้ปัญหาแย่งกันเขียนไฟล์)
+            resp = requests.post("http://127.0.0.1:8000/v1/system/generate-key", json={"license_key": lic_key})
+            new_key = resp.json().get("app_api_key")
+            
+            st.session_state.app_api_key = new_key
+            st.rerun()
             
     # ถ้ามี Key แล้ว
     else:
         st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
         st.code(st.session_state.app_api_key, language="bash")
         
+        # ปุ่มลบ/รีเซ็ต Key 
         if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
+            import requests
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
-            # 🚀 สั่งให้ FastAPI ลบคีย์ให้
-            try:
-                requests.post("http://127.0.0.1:8000/v1/internal/revoke-key", json={"license_key": lic_key})
-                st.session_state.app_api_key = None
-                st.rerun()
-            except:
-                st.error("ลบคีย์ไม่สำเร็จ กรุณาเช็ก FastAPI")
-
+            # ส่งคำสั่งไปให้ FastAPI ลบคีย์ให้
+            requests.post("http://127.0.0.1:8000/v1/system/revoke-key", json={"license_key": lic_key})
+            
+            st.session_state.app_api_key = None
+            st.rerun()
         # คู่มือ Zapier... (ละไว้ โค้ดเดิมของคุณได้เลย)
         with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
             st.markdown(f"**URL:** `https://your-ngrok-url/v1/extract` \n\n**X-App-Key:** `{st.session_state.app_api_key}`")
