@@ -1150,17 +1150,22 @@ import requests
 if st.session_state.is_pro:
     st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
             
-   # ถ้ายังไม่มี Key
+  # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
         st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
         
         if st.button("⚡ Generate App API Key", type="primary"):
-            import requests
+            import secrets
+            from database import save_app_api_key
+            
+            # ดึง License Key มาใช้เป็นข้อมูลอ้างอิง
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
-            # ส่งคำสั่งไปให้ FastAPI สร้างและบันทึกคีย์ให้ (แก้ปัญหาแย่งกันเขียนไฟล์)
-            resp = requests.post("https://twice-truck-hug.ngrok-free.dev/v1/system/generate-key", json={"license_key": lic_key})
-            new_key = resp.json().get("app_api_key")
+            # สุ่มสร้าง Key ใหม่
+            new_key = "sk_live_" + secrets.token_hex(16)
+            
+            # บันทึกลง Supabase โดยตรง (ไม่ต้องผ่าน ngrok แล้ว)
+            save_app_api_key(lic_key, new_key)
             
             st.session_state.app_api_key = new_key
             st.rerun()
