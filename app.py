@@ -48,17 +48,7 @@ st.set_page_config(
 # ============================================================
 # แก้สีหรือฟอนต์ได้ที่ตัวแปร :root ด้านล่างนี้จุดเดียว ระบบจะเปลี่ยนทั้งแอป
 
-CUSTOM_CSS = /* ป้องกันกล่อง Expander เปลี่ยนเป็นสีดำเมื่อถูกคลิกหรือ Focus */
-[data-testid="stExpander"] details, 
-[data-testid="stExpander"] summary {
-  background-color: var(--card) !important;
-}
-[data-testid="stExpander"] summary:hover,
-[data-testid="stExpander"] summary:focus,
-[data-testid="stExpander"] summary:active {
-  background-color: #F4F4F5 !important;
-  color: var(--ink) !important;
-}"""
+CUSTOM_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
@@ -252,6 +242,18 @@ code, pre, [data-testid="stCodeBlock"] {
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea {
   border-radius: 10px !important;
+}
+
+/* ป้องกันกล่อง Expander เปลี่ยนเป็นสีดำเมื่อถูกคลิกหรือ Focus */
+[data-testid="stExpander"] details, 
+[data-testid="stExpander"] summary {
+  background-color: var(--card) !important;
+}
+[data-testid="stExpander"] summary:hover,
+[data-testid="stExpander"] summary:focus,
+[data-testid="stExpander"] summary:active {
+  background-color: #F4F4F5 !important;
+  color: var(--ink) !important;
 }
 """
 
