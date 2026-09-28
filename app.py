@@ -326,6 +326,14 @@ TXT = {
         "license_valid": "ปลดล็อก Pro สำเร็จ",
         "license_invalid": "License Key ไม่ถูกต้อง",
         "license_error": "ตรวจสอบ License Key ไม่สำเร็จ",
+        "api_service_title": "### ⚙️ API Service (สำหรับสาย Automation)",
+        "api_service_desc": "เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.",
+        "api_key_missing_info": "คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก",
+        "api_key_generate_btn": "⚡ Generate App API Key",
+        "api_key_ready_success": "✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)",
+        "api_key_revoke_btn": "🗑️ Revoke Key (ลบและสร้างใหม่)",
+        "api_zapier_guide": "📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)",
+        "api_pro_locked": "🔒 ฟีเจอร์ API Service เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น",
     },
     "EN": {
         "app_title": "⚡ Text Extractor",
@@ -399,6 +407,14 @@ TXT = {
         "license_valid": "Pro unlocked successfully",
         "license_invalid": "Invalid license key",
         "license_error": "Could not verify the license key",
+        "api_service_title": "### ⚙️ API Service (For Automation Workflows)",
+        "api_service_desc": "Connect with Make.com / Zapier for 24/7 automated data extraction.",
+        "api_key_missing_info": "You haven't generated an App API Key for external systems yet.",
+        "api_key_generate_btn": "⚡ Generate App API Key",
+        "api_key_ready_success": "✅ Your App API Key is ready (Keep it secret!)",
+        "api_key_revoke_btn": "🗑️ Revoke Key (Delete & Regenerate)",
+        "api_zapier_guide": "📖 How to setup in Make.com / Zapier (Click to view)",
+        "api_pro_locked": "🔒 The API Service is an exclusive feature for Pro members.",
     },
 }
 
@@ -1143,50 +1159,44 @@ if st.session_state.last_records:
 # 14) DEVELOPER API (HEADLESS ENGINE) - โซนสำหรับ Make/Zapier
 # ============================================================
 st.divider()
-st.markdown("### ⚙️ API Service (สำหรับสาย Automation)")
-
-import requests
+st.markdown(t("api_service_title"))
 
 if st.session_state.is_pro:
-    st.markdown("เชื่อมต่อกับ Make.com / Zapier เพื่อแปลงข้อมูลอัตโนมัติ 24 ชม.")
+    st.markdown(t("api_service_desc"))
             
-  # ถ้ายังไม่มี Key
+    # ถ้ายังไม่มี Key
     if st.session_state.app_api_key is None:
-        st.info("คุณยังไม่ได้สร้าง App API Key สำหรับเชื่อมต่อระบบภายนอก")
+        st.info(t("api_key_missing_info"))
         
-        if st.button("⚡ Generate App API Key", type="primary"):
+        if st.button(t("api_key_generate_btn"), type="primary"):
             import secrets
             from database import save_app_api_key
             
-            # ดึง License Key มาใช้เป็นข้อมูลอ้างอิง
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
-            
-            # สุ่มสร้าง Key ใหม่
             new_key = "sk_live_" + secrets.token_hex(16)
             
-            # บันทึกลง Supabase โดยตรง (ไม่ต้องผ่าน ngrok แล้ว)
+            # บันทึกลง Supabase โดยตรง ไม่ผ่าน ngrok
             save_app_api_key(lic_key, new_key)
-            
             st.session_state.app_api_key = new_key
             st.rerun()
             
     # ถ้ามี Key แล้ว
     else:
-        st.success("✅ App API Key ของคุณพร้อมใช้งานแล้ว (อย่าแชร์ให้ผู้อื่น!)")
+        st.success(t("api_key_ready_success"))
         st.code(st.session_state.app_api_key, language="bash")
         
-        # ปุ่มลบ/รีเซ็ต Key 
-        if st.button("🗑️ Revoke Key (ลบและสร้างใหม่)"):
-            import requests
+        if st.button(t("api_key_revoke_btn")):
+            from database import revoke_app_api_key
             lic_key = st.session_state.license_key_input if st.session_state.license_key_input else "dev_local"
             
-            # ส่งคำสั่งไปให้ FastAPI ลบคีย์ให้
-            requests.post("[https://twice-truck-hug.ngrok-free.dev/v1/system/revoke-key", json={"license_key": lic_key})
-            
+            # ลบคีย์ออกจาก Supabase โดยตรง
+            revoke_app_api_key(lic_key)
             st.session_state.app_api_key = None
             st.rerun()
-        # คู่มือ Zapier... (ละไว้ โค้ดเดิมของคุณได้เลย)
-        with st.expander("📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)"):
-            st.markdown(f"**URL:** `https://your-ngrok-url/v1/extract` \n\n**X-App-Key:** `{st.session_state.app_api_key}`")
+
+        with st.expander(t("api_zapier_guide")):
+            # เปลี่ยน URL ตรงนี้เป็นลิงก์ Render ของคุณ
+            render_url = "https://<ชื่อ-app-ของคุณ>.onrender.com/v1/extract"
+            st.markdown(f"**URL:** `{render_url}` \n\n**X-App-Key:** `{st.session_state.app_api_key}`")
 else:
-    st.warning("🔒 ฟีเจอร์ API Service เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น")
+    st.warning(t("api_pro_locked"))
