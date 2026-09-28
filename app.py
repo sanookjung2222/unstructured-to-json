@@ -48,7 +48,17 @@ st.set_page_config(
 # ============================================================
 # แก้สีหรือฟอนต์ได้ที่ตัวแปร :root ด้านล่างนี้จุดเดียว ระบบจะเปลี่ยนทั้งแอป
 
-CUSTOM_CSS = """
+CUSTOM_CSS = /* ป้องกันกล่อง Expander เปลี่ยนเป็นสีดำเมื่อถูกคลิกหรือ Focus */
+[data-testid="stExpander"] details, 
+[data-testid="stExpander"] summary {
+  background-color: var(--card) !important;
+}
+[data-testid="stExpander"] summary:hover,
+[data-testid="stExpander"] summary:focus,
+[data-testid="stExpander"] summary:active {
+  background-color: #F4F4F5 !important;
+  color: var(--ink) !important;
+}"""
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
@@ -259,7 +269,7 @@ TXT = {
         "banner": "แปลงข้อความยุ่งเหยิง ให้กลายเป็นโครงสร้างข้อมูลที่ก๊อปปี้ไปวางแอปไหนก็ฟอร์แมตไม่พัง",
         "hero_pain": "เบื่อไหม? Copy ข้อมูลจากไหนก็ไม่รู้ พอวางใน Notion แล้ว column เพี้ยน ต้องมานั่งไล่แก้ทีละบรรทัด",
         "sub_banner": "ฟอร์แมตเป๊ะ สำหรับสายจดโน้ต (Notion / Obsidian), สายสเปรดชีต (Excel / Google Sheets) และสายทำระบบ Automation (Make / Zapier)",
-        "api_key_label": "🔑 Anthropic API Key",
+        "api_key_label": "🔑 Your API Key",
         "api_key_placeholder": "sk-ant-...",
         "check_button": "🔑 Check",
         "go_pro_button": "👑 Go Pro",
@@ -334,6 +344,12 @@ TXT = {
         "api_key_revoke_btn": "🗑️ Revoke Key (ลบและสร้างใหม่)",
         "api_zapier_guide": "📖 วิธีตั้งค่าใน Make.com / Zapier (Click เพื่อดู)",
         "api_pro_locked": "🔒 ฟีเจอร์ API Service เป็นฟีเจอร์สำหรับสมาชิก Pro เท่านั้น",
+        "api_key_label": "🔑 AI API Key (Anthropic / OpenAI)",
+        "api_key_placeholder": "sk-ant-... หรือ sk-proj-...",
+        "need_api_key_warning": "กรุณาใส่ AI API Key ที่ด้านบนก่อนใช้งาน",
+        "tutorial_expander": "📖 วิธีขอ AI API Key (คลิกเพื่อดู)",
+        "tutorial_anthropic": "**วิธีขอ Anthropic API Key**\n1. เข้าไปที่ [console.anthropic.com](https://console.anthropic.com/)\n2. สมัครสมาชิก หรือ Log in\n3. ไปที่เมนู **API Keys** แล้วกด **Create Key**\n4. คัดลอกรหัสที่ขึ้นต้นด้วย `sk-ant-...`",
+        "tutorial_openai": "**วิธีขอ OpenAI API Key**\n1. เข้าไปที่ [platform.openai.com](https://platform.openai.com/)\n2. สมัครสมาชิก หรือ Log in\n3. ไปที่เมนู **API Keys** แล้วกด **Create new secret key**\n4. คัดลอกรหัสที่ขึ้นต้นด้วย `sk-proj-...` หรือ `sk-...`",
     },
     "EN": {
         "app_title": "⚡ Text Extractor",
@@ -415,6 +431,12 @@ TXT = {
         "api_key_revoke_btn": "🗑️ Revoke Key (Delete & Regenerate)",
         "api_zapier_guide": "📖 How to setup in Make.com / Zapier (Click to view)",
         "api_pro_locked": "🔒 The API Service is an exclusive feature for Pro members.",
+        "api_key_label": "🔑 AI API Key (Anthropic / OpenAI)",
+        "api_key_placeholder": "sk-ant-... or sk-proj-...",
+        "need_api_key_warning": "Please enter your AI API Key above first",
+        "tutorial_expander": "📖 How to get an AI API Key (Click to view)",
+        "tutorial_anthropic": "**How to get an Anthropic API Key**\n1. Go to [console.anthropic.com](https://console.anthropic.com/)\n2. Sign up or Log in\n3. Go to **API Keys** and click **Create Key**\n4. Copy the key starting with `sk-ant-...`",
+        "tutorial_openai": "**How to get an OpenAI API Key**\n1. Go to [platform.openai.com](https://platform.openai.com/)\n2. Sign up or Log in\n3. Go to **API Keys** and click **Create new secret key**\n4. Copy the key starting with `sk-proj-...` or `sk-...`",
     },
 }
 
@@ -992,13 +1014,10 @@ with key_cols[1]:
         ok, msg = check_api_key(st.session_state.api_key_input)
         st.session_state.api_key_status = "valid" if ok else "invalid"
         st.session_state.api_key_message = msg
-with st.expander("📖 วิธีขอ Anthropic API Key (คลิกเพื่อดู)"):
-    st.markdown("""
-    1. เข้าไปที่เว็บ [console.anthropic.com](https://console.anthropic.com/)
-    2. สมัครสมาชิก หรือ Log in เข้าสู่ระบบ
-    3. ไปที่เมนู **API Keys** แล้วกด **Create Key**
-    4. คัดลอกรหัสที่ขึ้นต้นด้วย `sk-ant-...` นำมาวางในช่องกรอกด้านบนได้เลยครับ
-    """)
+with st.expander(t("tutorial_expander")):
+    st.markdown(t("tutorial_anthropic"))
+    st.divider()
+    st.markdown(t("tutorial_openai"))
 
 if st.session_state.api_key_status == "valid":
     st.caption(f"✅ {st.session_state.api_key_message}")
